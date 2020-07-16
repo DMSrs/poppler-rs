@@ -1,0 +1,48 @@
+[package]
+name = "poppler-sys"
+version = "0.1.0"
+authors = [
+    "Marc Brinkmann <git@marcbrinkmann.de>",
+    "Denys Vitali <denys@denv.it>",
+    "Thiago Machado <swfsql@gmail.com>"
+]
+repository = "https://github.com/DMSrs/poppler-rs"
+license = "GPL-2.0"
+description = "Native bindings to the libpoppler library"
+keywords = ["poppler"]
+categories = ["external-ffi-bindings"]
+build = "build.rs"
+links = "poppler-glib"
+
+[dependencies]
+cairo-rs = { version = "0.9.1", features = ["png", "pdf"] }
+cairo-sys-rs = "0.10.0"
+glib = "0.10.1"
+glib-sys = "0.10.0"
+gobject-sys = "0.10.0"
+gio-sys = "0.10.0"
+gtypes = "0.2.0"
+
+[build-dependencies]
+bindgen = "0.49.0"
+semver = "0.9.0"
+pkg-config = "0.3.14"
+strum = "0.15.0"
+strum_macros = "0.15.0"
+lazy_static = "1.3.0"
+
+[features]
+# if unset (default), the bindings from `build/vendored_bindings`
+# will be copied to `OUTPUT_DIR` and be used as actual bindings.
+#
+# if set, new bindings will be generated into `OUTPUT_DIR` and they
+# will be used as actual bindings. Also, they will be copied into
+# `build/vendored_bindings`.
+#
+# TODO: have more vendoring/linkage options
+# 1. download, compile and static link
+# 2. download, compile and dynamic link
+# 3. pkg-config dynamic link (DONE)
+# 4. pkg-config-like dynamic link
+generate-bindings = []
+default = []

@@ -1,4 +1,5 @@
 use glib;
+use glib::translate::from_glib_full;
 use glib_sys::GError;
 use std::ffi::{CString, OsString};
 use std::{fs, path, ptr};
@@ -14,7 +15,9 @@ where
     let return_value = f(&mut err as *mut *mut GError);
 
     if return_value.is_null() {
-        Err(glib::error::Error::wrap(err))
+        // Safety: No idea whatsoever
+        // XXX: This is a complete guess based on seeing similar-ish patterns in the glib codebase
+        Err(unsafe { from_glib_full(err) })
     } else {
         Ok(return_value)
     }

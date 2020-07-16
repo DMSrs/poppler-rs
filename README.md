@@ -7,3 +7,8 @@
 **Warning**: libpoppler is based on the GPL-licensed [xpdf-3.0](http://www.foolabs.com/xpdf/) and is unlikely to ever be released under a different license. As a result, every program or library linking against this crate *must* be GPL licensed as well.
 
 The crate has only been tested on Linux; ensure that `libpoppler-glib` is installed to use it.
+
+## Features
+
+- `generate-bindings`
+    See `poppler-sys/README` for more information.
