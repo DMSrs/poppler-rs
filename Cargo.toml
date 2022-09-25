@@ -11,3 +11,4 @@ edition = "2018"
 [dependencies]
 cairo-rs = { version = "0.15", features = ["png", "pdf"] }
 glib = "0.15"
+gobject-sys = "0.15"

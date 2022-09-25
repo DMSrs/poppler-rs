@@ -107,6 +107,14 @@ impl PopplerDocument {
     }
 }
 
+impl Drop for PopplerDocument {
+    fn drop(&mut self) {
+        unsafe {
+            gobject_sys::g_object_unref(self.0 as *mut gobject_sys::GObject);
+        }
+    }
+}
+
 impl PopplerPage {
     pub fn get_size(&self) -> (f64, f64) {
         let mut width: f64 = 0.0;
@@ -137,6 +145,14 @@ impl PopplerPage {
         match unsafe { ffi::poppler_page_get_text(self.0) } {
             ptr if ptr.is_null() => None,
             ptr => unsafe { Some(CStr::from_ptr(ptr).to_str().unwrap()) },
+        }
+    }
+}
+
+impl Drop for PopplerPage {
+    fn drop(&mut self) {
+        unsafe {
+            gobject_sys::g_object_unref(self.0 as *mut gobject_sys::GObject);
         }
     }
 }
@@ -176,7 +192,6 @@ mod tests {
             ctx.restore().unwrap();
             ctx.show_page().unwrap();
         }
-        // g_object_unref (page);
         //surface.write_to_png("file.png");
         surface.finish();
     }
