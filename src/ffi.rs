@@ -7,8 +7,6 @@ use std::os::raw::{c_char, c_double, c_int, c_uint};
 pub enum PopplerDocument {}
 pub enum PopplerPage {}
 
-pub const C_NULL: i32 = 1;
-
 // FIXME: *const instead of mut pointers?
 
 #[link(name = "poppler-glib")]

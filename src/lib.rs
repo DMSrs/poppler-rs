@@ -17,12 +17,18 @@ impl PopplerDocument {
         p: P,
         password: Option<&str>,
     ) -> Result<PopplerDocument, glib::error::Error> {
-        let pw = if password.is_some() { CString::new(password).map_err(|_| {
-            glib::error::Error::new(
-                glib::FileError::Inval,
-                "Password invalid (possibly contains NUL characters)",
-            )
-        })? } else { ffi::C_NULL.into() };
+        let pw = if password.is_some() {
+            CString::new(password).map_err(|_| {
+                glib::error::Error::new(
+                    glib::FileError::Inval,
+                    "Password invalid (possibly contains NUL characters)",
+                )
+            })?
+        } else {
+            // TODO: find a better way to make this,
+            // for now, this hack will remain.
+            1
+        };
 
         let path_cstring = util::path_to_glib_url(p)?;
         let doc = util::call_with_gerror(|err_ptr| unsafe {
@@ -41,12 +47,16 @@ impl PopplerDocument {
                 "data is empty",
             ));
         }
-        let pw = if password.is_some { CString::new(password).map_err(|_| {
-            glib::error::Error::new(
-                glib::FileError::Inval,
-                "Password invalid (possibly contains NUL characters)",
-            )
-        })? } else { ffi::C_NULL };
+        let pw = if password.is_some {
+            CString::new(password).map_err(|_| {
+                glib::error::Error::new(
+                    glib::FileError::Inval,
+                    "Password invalid (possibly contains NUL characters)",
+                )
+            })?
+        } else {
+            1
+        };
 
         let doc = util::call_with_gerror(|err_ptr| unsafe {
             ffi::poppler_document_new_from_data(
@@ -153,7 +163,7 @@ mod tests {
     #[test]
     fn test1() {
         let filename = "test.pdf";
-        let doc = PopplerDocument::new_from_file(filename, "").unwrap();
+        let doc = PopplerDocument::new_from_file(filename, Some("")).unwrap();
         let num_pages = doc.get_n_pages();
 
         println!("Document has {} page(s)", num_pages);
@@ -184,7 +194,7 @@ mod tests {
     #[test]
     fn test2_from_file() {
         let path = "test.pdf";
-        let doc: PopplerDocument = PopplerDocument::new_from_file(path, "upw").unwrap();
+        let doc: PopplerDocument = PopplerDocument::new_from_file(path, Some("upw")).unwrap();
         let num_pages = doc.get_n_pages();
         let title = doc.get_title().unwrap();
         let metadata = doc.get_metadata();
@@ -225,7 +235,8 @@ mod tests {
         let mut file = File::open(path).unwrap();
         let mut data: Vec<u8> = Vec::new();
         file.read_to_end(&mut data).unwrap();
-        let doc: PopplerDocument = PopplerDocument::new_from_data(&mut data[..], "upw").unwrap();
+        let doc: PopplerDocument =
+            PopplerDocument::new_from_data(&mut data[..], Some("upw")).unwrap();
         let num_pages = doc.get_n_pages();
         let title = doc.get_title().unwrap();
         let metadata = doc.get_metadata();
@@ -252,6 +263,6 @@ mod tests {
     fn test3() {
         let mut data = vec![];
 
-        assert!(PopplerDocument::new_from_data(&mut data[..], "upw").is_err());
+        assert!(PopplerDocument::new_from_data(&mut data[..], Some("upw")).is_err());
     }
 }
