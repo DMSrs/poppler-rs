@@ -15,14 +15,14 @@ pub struct PopplerPage(*mut ffi::PopplerPage);
 impl PopplerDocument {
     pub fn new_from_file<P: AsRef<path::Path>>(
         p: P,
-        password: &str,
+        password: Option<&str>,
     ) -> Result<PopplerDocument, glib::error::Error> {
-        let pw = CString::new(password).map_err(|_| {
+        let pw = if password.is_some() { CString::new(password).map_err(|_| {
             glib::error::Error::new(
                 glib::FileError::Inval,
                 "Password invalid (possibly contains NUL characters)",
             )
-        })?;
+        })? } else { ffi::C_NULL.into() };
 
         let path_cstring = util::path_to_glib_url(p)?;
         let doc = util::call_with_gerror(|err_ptr| unsafe {
@@ -33,7 +33,7 @@ impl PopplerDocument {
     }
     pub fn new_from_data(
         data: &mut [u8],
-        password: &str,
+        password: Option<&str>,
     ) -> Result<PopplerDocument, glib::error::Error> {
         if data.is_empty() {
             return Err(glib::error::Error::new(
@@ -41,12 +41,12 @@ impl PopplerDocument {
                 "data is empty",
             ));
         }
-        let pw = CString::new(password).map_err(|_| {
+        let pw = if password.is_some { CString::new(password).map_err(|_| {
             glib::error::Error::new(
                 glib::FileError::Inval,
                 "Password invalid (possibly contains NUL characters)",
             )
-        })?;
+        })? } else { ffi::C_NULL };
 
         let doc = util::call_with_gerror(|err_ptr| unsafe {
             ffi::poppler_document_new_from_data(
