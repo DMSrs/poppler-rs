@@ -2,30 +2,23 @@ name: Rust
 
 on:
   push:
-    branches:
-      - master
-      # TODO: remove this, only for testing
-      - optionify-password-params
+    branches: [ master ]
   pull_request:
-    branches:
-      - master
-      # TODO: remove this, only for testing
-      - optionify-password-params
+    branches: [ master ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Install libpoppler-glib-dev
-        run: sudo apt-get update && sudo apt-get install libpoppler-glib-dev
-      - name: Build
-        run: cargo build --verbose
-      - name: Build (release)
-        run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+    - uses: actions/checkout@v2
+    - name: Install libpoppler-glib-dev
+      run: sudo apt-get update && sudo apt-get install libpoppler-glib-dev
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
