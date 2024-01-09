@@ -133,11 +133,13 @@ impl PopplerPage {
         (width, height)
     }
 
+    #[cfg(feature = "render")]
     pub fn render(&self, ctx: &cairo::Context) {
         let ctx_raw = ctx.to_raw_none();
         unsafe { ffi::poppler_page_render(self.0, ctx_raw) }
     }
 
+    #[cfg(feature = "render")]
     pub fn render_for_printing(&self, ctx: &cairo::Context) {
         let ctx_raw = ctx.to_raw_none();
         unsafe { ffi::poppler_page_render_for_printing(self.0, ctx_raw) }
@@ -155,20 +157,25 @@ impl PopplerPage {
 mod tests {
     use crate::PopplerDocument;
     use crate::PopplerPage;
+    #[cfg(feature = "render")]
     use cairo::Context;
+    #[cfg(feature = "render")]
     use cairo::Format;
+    #[cfg(feature = "render")]
     use cairo::ImageSurface;
     use std::{fs::File, io::Read};
 
     #[test]
     fn test1() {
         let filename = "test.pdf";
-        let doc = PopplerDocument::new_from_file(filename, Some("")).unwrap();
+        let doc = PopplerDocument::new_from_file(filename, None).unwrap();
         let num_pages = doc.get_n_pages();
 
         println!("Document has {} page(s)", num_pages);
-
+        
+        #[cfg(feature = "render")]
         let surface = cairo::PdfSurface::new(420.0, 595.0, "output.pdf").unwrap();
+        #[cfg(feature = "render")]
         let ctx = Context::new(&surface).unwrap();
 
         // FIXME: move iterator to poppler
