@@ -14,7 +14,5 @@ edition = "2018"
 render = ["dep:cairo-rs"]
 
 [dependencies]
-# cairo-rs = "0.18.5"
-cairo-rs = { version = "0.15", features = ["png", "pdf"], optional = true }
-# glib = "0.18.5"
-glib = "0.15"
+cairo-rs = { version = "0.18.5", features = ["png", "pdf"], optional = true }
+glib = "0.18.5"
