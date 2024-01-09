@@ -18,12 +18,14 @@ impl PopplerDocument {
         password: Option<&str>,
     ) -> Result<PopplerDocument, glib::error::Error> {
         let pw = if password.is_some() {
-            CString::new(password).map_err(|_| {
-                glib::error::Error::new(
-                    glib::FileError::Inval,
-                    "Password invalid (possibly contains NUL characters)",
-                )
-            })?
+            CString::new(password.expect("That it is something when check if it is.")).map_err(
+                |_| {
+                    glib::error::Error::new(
+                        glib::FileError::Inval,
+                        "Password invalid (possibly contains NUL characters)",
+                    )
+                },
+            )?
         } else {
             // TODO: find a better way to make this,
             // for now, this hack will remain.
@@ -47,13 +49,15 @@ impl PopplerDocument {
                 "data is empty",
             ));
         }
-        let pw = if password.is_some {
-            CString::new(password).map_err(|_| {
-                glib::error::Error::new(
-                    glib::FileError::Inval,
-                    "Password invalid (possibly contains NUL characters)",
-                )
-            })?
+        let pw = if password.is_some() {
+            CString::new(password.expect("That it's not None RIGHT after I check")).map_err(
+                |_| {
+                    glib::error::Error::new(
+                        glib::FileError::Inval,
+                        "Password invalid (possibly contains NUL characters)",
+                    )
+                },
+            )?
         } else {
             1
         };
