@@ -46,18 +46,17 @@ impl PopplerDocument {
                 "data is empty",
             ));
         }
-        let pw = if password.is_some() {
-            CString::new(password.expect("That it's not None RIGHT after I check")).map_err(
-                |_| {
-                    glib::error::Error::new(
-                        glib::FileError::Inval,
-                        "Password invalid (possibly contains NUL characters)",
-                    )
-                },
-            )?
+        let pw = CString::new(if password.is_none() {
+            ""
         } else {
-            1
-        };
+            password.expect("That it's not None RIGHT after I check")
+        })
+        .map_err(|_| {
+            glib::error::Error::new(
+                glib::FileError::Inval,
+                "Password invalid (possibly contains NUL characters)",
+            )
+        })?;
 
         let doc = util::call_with_gerror(|err_ptr| unsafe {
             ffi::poppler_document_new_from_data(
