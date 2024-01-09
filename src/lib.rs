@@ -17,20 +17,17 @@ impl PopplerDocument {
         p: P,
         password: Option<&str>,
     ) -> Result<PopplerDocument, glib::error::Error> {
-        let pw = if password.is_some() {
-            CString::new(password.expect("That it is something when check if it is.")).map_err(
-                |_| {
-                    glib::error::Error::new(
-                        glib::FileError::Inval,
-                        "Password invalid (possibly contains NUL characters)",
-                    )
-                },
-            )?
+        let pw = CString::new(if password.is_none() {
+            ""
         } else {
-            // TODO: find a better way to make this,
-            // for now, this hack will remain.
-            1
-        };
+            password.expect("That it is something when check if it is.")
+        })
+        .map_err(|_| {
+            glib::error::Error::new(
+                glib::FileError::Inval,
+                "Password invalid (possibly contains NUL characters)",
+            )
+        })?;
 
         let path_cstring = util::path_to_glib_url(p)?;
         let doc = util::call_with_gerror(|err_ptr| unsafe {
