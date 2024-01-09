@@ -20,7 +20,7 @@ impl PopplerDocument {
         let pw = CString::new(if password.is_none() {
             ""
         } else {
-            password.expect("That it is something when check if it is.")
+            password.expect("password.is_none() is false, but apparently it's lying.")
         })
         .map_err(|_| {
             glib::error::Error::new(
@@ -49,7 +49,7 @@ impl PopplerDocument {
         let pw = CString::new(if password.is_none() {
             ""
         } else {
-            password.expect("That it's not None RIGHT after I check")
+            password.expect("password.is_none() is false, but apparently it's lying.")
         })
         .map_err(|_| {
             glib::error::Error::new(
