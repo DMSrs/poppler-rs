@@ -183,21 +183,19 @@ mod tests {
             let page = doc.get_page(page_num).unwrap();
             let (w, h) = page.get_size();
             println!("page {} has size {}, {}", page_num, w, h);
-
             #[cfg(feature = "render")]
-            surface.set_size(w, h).unwrap();
-
-            #[cfg(feature = "render")]
-            ctx.save().unwrap();
-            #[cfg(feature = "render")]
-            page.render(&ctx);
+            (|page: &PopplerPage, ctx: &Context| {
+                surface.set_size(w, h).unwrap();
+                ctx.save().unwrap();
+                page.render(ctx);
+            })(&page, &ctx);
 
             println!("Text: {:?}", page.get_text().unwrap_or(""));
-
             #[cfg(feature = "render")]
-            ctx.restore().unwrap();
-            #[cfg(feature = "render")]
-            ctx.show_page().unwrap();
+            (|ctx: &Context| {
+                ctx.restore().unwrap();
+                ctx.show_page().unwrap();
+            })(&ctx);
         }
         // g_object_unref (page);
         //surface.write_to_png("file.png");
@@ -238,13 +236,12 @@ mod tests {
         let ctx = Context::new(&surface).unwrap();
 
         #[cfg(feature = "render")]
-        ctx.save().unwrap();
-        #[cfg(feature = "render")]
-        page.render(&ctx);
-        #[cfg(feature = "render")]
-        ctx.restore().unwrap();
-        #[cfg(feature = "render")]
-        ctx.show_page().unwrap();
+        (|page: &PopplerPage, ctx: &Context| {
+            ctx.save().unwrap();
+            page.render(ctx);
+            ctx.restore().unwrap();
+            ctx.show_page().unwrap();
+        })(&page, &ctx);
 
         #[cfg(feature = "render")]
         let mut f: File = File::create("out.png").unwrap();
