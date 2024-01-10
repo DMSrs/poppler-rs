@@ -172,7 +172,7 @@ mod tests {
         let num_pages = doc.get_n_pages();
 
         println!("Document has {} page(s)", num_pages);
-        
+
         #[cfg(feature = "render")]
         let surface = cairo::PdfSurface::new(420.0, 595.0, "output.pdf").unwrap();
         #[cfg(feature = "render")]
@@ -183,18 +183,25 @@ mod tests {
             let page = doc.get_page(page_num).unwrap();
             let (w, h) = page.get_size();
             println!("page {} has size {}, {}", page_num, w, h);
+
+            #[cfg(feature = "render")]
             surface.set_size(w, h).unwrap();
 
+            #[cfg(feature = "render")]
             ctx.save().unwrap();
+            #[cfg(feature = "render")]
             page.render(&ctx);
 
             println!("Text: {:?}", page.get_text().unwrap_or(""));
 
+            #[cfg(feature = "render")]
             ctx.restore().unwrap();
+            #[cfg(feature = "render")]
             ctx.show_page().unwrap();
         }
         // g_object_unref (page);
         //surface.write_to_png("file.png");
+        #[cfg(feature = "render")]
         surface.finish();
     }
 
@@ -225,15 +232,23 @@ mod tests {
 
         assert_eq!(title, "This is a test PDF file");
 
+        #[cfg(feature = "render")]
         let surface = ImageSurface::create(Format::ARgb32, w as i32, h as i32).unwrap();
+        #[cfg(feature = "render")]
         let ctx = Context::new(&surface).unwrap();
 
+        #[cfg(feature = "render")]
         ctx.save().unwrap();
+        #[cfg(feature = "render")]
         page.render(&ctx);
+        #[cfg(feature = "render")]
         ctx.restore().unwrap();
+        #[cfg(feature = "render")]
         ctx.show_page().unwrap();
 
+        #[cfg(feature = "render")]
         let mut f: File = File::create("out.png").unwrap();
+        #[cfg(feature = "render")]
         surface.write_to_png(&mut f).expect("Unable to write PNG");
     }
     #[test]
