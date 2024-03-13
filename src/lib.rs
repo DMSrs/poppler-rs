@@ -7,6 +7,27 @@ mod ffi;
 mod util;
 
 #[derive(Debug)]
+pub struct PagesIter<'a> {
+    total: usize,
+    index: usize,
+    doc: &'a PopplerDocument
+}
+
+impl<'a> Iterator for PagesIter<'a> {
+    type Item = PopplerPage;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.total {
+            let page = self.doc.get_page(self.index);
+            self.index += 1;
+            page
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct PopplerDocument(*mut ffi::PopplerDocument);
 
 #[derive(Debug)]
@@ -114,6 +135,10 @@ impl PopplerDocument {
             ptr if ptr.is_null() => None,
             ptr => Some(PopplerPage(ptr)),
         }
+    }
+
+    pub fn pages(&self) -> PagesIter {
+        PagesIter { total: self.get_n_pages(), index: 0, doc: self }
     }
 }
 
@@ -283,5 +308,51 @@ mod tests {
         let mut data = vec![];
 
         assert!(PopplerDocument::new_from_data(&mut data[..], Some("upw")).is_err());
+    }
+
+    #[test]
+    fn test4() {
+        let path = "test.pdf";
+        let doc: PopplerDocument = PopplerDocument::new_from_file(path, None).unwrap();
+        let total = doc.get_n_pages();
+
+        let mut count = 0;
+        let src_w = 595f64;
+        let src_h = 842f64;
+
+        for (index, p) in doc.pages().enumerate() {
+            let (w, h) = p.get_size();
+            assert!(w == src_w);
+            assert!(h == src_h);
+
+            println!("page {}/{} -- {}x{}", index+1, total, w, h);
+            count += 1;
+        }
+
+        assert!(count == 1);
+
+        #[cfg(feature = "render")]
+        let count = 0;
+
+        #[cfg(feature = "render")]
+        for (index, p) in doc.pages().enumerate() {
+            let (w, h) = p.get_size();
+
+            assert!(w == src_w);
+            assert!(h == src_h);
+
+            let surface = ImageSurface::create(Format::ARgb32, w as i32, h as i32).unwrap();
+            (|page: &PopplerPage, ctx: &Context| {
+                ctx.save().unwrap();
+                page.render(ctx);
+                ctx.restore().unwrap();
+                ctx.show_page().unwrap();
+            })(&page, &ctx);
+            let mut f: File = File::create(format!("out{}.png", index)).unwrap();
+            surface.write_to_png(&mut f).expect("Unable to write PNG");
+        }
+
+        #[cfg(feature = "render")]
+        assert!(count == 1)
     }
 }
