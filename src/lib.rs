@@ -7,27 +7,6 @@ mod ffi;
 mod util;
 
 #[derive(Debug)]
-pub struct PagesIter<'a> {
-    total: usize,
-    index: usize,
-    doc: &'a PopplerDocument
-}
-
-impl<'a> Iterator for PagesIter<'a> {
-    type Item = PopplerPage;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.total {
-            let page = self.doc.get_page(self.index);
-            self.index += 1;
-            page
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct PopplerDocument(*mut ffi::PopplerDocument);
 
 #[derive(Debug)]
@@ -177,6 +156,28 @@ impl PopplerPage {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct PagesIter<'a> {
+    total: usize,
+    index: usize,
+    doc: &'a PopplerDocument
+}
+
+impl<'a> Iterator for PagesIter<'a> {
+    type Item = PopplerPage;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.total {
+            let page = self.doc.get_page(self.index);
+            self.index += 1;
+            page
+        } else {
+            None
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
