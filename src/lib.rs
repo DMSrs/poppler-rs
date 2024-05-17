@@ -117,7 +117,11 @@ impl PopplerDocument {
     }
 
     pub fn pages(&self) -> PagesIter {
-        PagesIter { total: self.get_n_pages(), index: 0, doc: self }
+        PagesIter {
+            total: self.get_n_pages(),
+            index: 0,
+            doc: self,
+        }
     }
 }
 
@@ -152,7 +156,7 @@ impl PopplerPage {
     pub fn get_text(&self) -> Option<&str> {
         match unsafe { ffi::poppler_page_get_text(self.0) } {
             ptr if ptr.is_null() => None,
-            ptr => unsafe { Some(CStr::from_ptr(ptr).to_str().unwrap()) },
+            ptr => unsafe { Some(CStr::from_ptr(ptr).to_str().unwrap_or_default()) },
         }
     }
 }
@@ -161,7 +165,7 @@ impl PopplerPage {
 pub struct PagesIter<'a> {
     total: usize,
     index: usize,
-    doc: &'a PopplerDocument
+    doc: &'a PopplerDocument,
 }
 
 impl<'a> Iterator for PagesIter<'a> {
@@ -177,7 +181,6 @@ impl<'a> Iterator for PagesIter<'a> {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -326,7 +329,7 @@ mod tests {
             assert!(w == src_w);
             assert!(h == src_h);
 
-            println!("page {}/{} -- {}x{}", index+1, total, w, h);
+            println!("page {}/{} -- {}x{}", index + 1, total, w, h);
             count += 1;
         }
 
