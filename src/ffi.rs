@@ -38,8 +38,15 @@ extern "C" {
         width: *mut c_double,
         height: *mut c_double,
     );
+
+    #[cfg(feature = "render")]
     pub fn poppler_page_render(page: *mut PopplerPage, cairo: *mut cairo::ffi::cairo_t);
-    pub fn poppler_page_render_for_printing(page: *mut PopplerPage, cairo: *mut cairo::ffi::cairo_t);
+
+    #[cfg(feature = "render")]
+    pub fn poppler_page_render_for_printing(
+        page: *mut PopplerPage,
+        cairo: *mut cairo::ffi::cairo_t,
+    );
 
     pub fn poppler_page_get_text(page: *mut PopplerPage) -> *mut c_char;
 }

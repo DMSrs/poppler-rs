@@ -1,14 +1,19 @@
 [package]
-authors = ["Marc Brinkmann <git@marcbrinkmann.de>",
-          "Denys Vitali <denys@denv.it>"]
+authors = [
+    "Marc Brinkmann <git@marcbrinkmann.de>",
+    "Denys Vitali <denys@denv.it>",
+]
 name = "poppler"
 license = "GPL-2.0"
-version = "0.3.2"
+version = "0.5.0"
 description = "Wrapper for the GPL-licensed Poppler PDF rendering library."
 repository = "https://github.com/DMSrs/poppler-rs"
 edition = "2018"
 
+[features]
+render = ["dep:cairo-rs"]
+
 [dependencies]
-cairo-rs = { version = "0.15", features = ["png", "pdf"] }
-glib = "0.15"
+cairo-rs = { version = "0.18.5", features = ["png", "pdf"], optional = true }
+glib = "0.18.5"
 gobject-sys = "0.15"
