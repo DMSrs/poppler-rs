@@ -24,17 +24,7 @@ impl PopplerDocument {
         p: P,
         password: Option<&str>,
     ) -> Result<PopplerDocument, glib::error::Error> {
-        let pw = CString::new(if password.is_none() {
-            ""
-        } else {
-            password.expect("password.is_none() is false, but apparently it's lying.")
-        })
-        .map_err(|_| {
-            glib::error::Error::new(
-                glib::FileError::Inval,
-                "Password invalid (possibly contains NUL characters)",
-            )
-        })?;
+        let pw = Self::get_password(password)?;
 
         let path_cstring = util::path_to_glib_url(p)?;
         let doc = util::call_with_gerror(|err_ptr| unsafe {
@@ -55,17 +45,7 @@ impl PopplerDocument {
                 "data is empty",
             ));
         }
-        let pw = CString::new(if password.is_none() {
-            ""
-        } else {
-            password.expect("password.is_none() is false, but apparently it's lying.")
-        })
-        .map_err(|_| {
-            glib::error::Error::new(
-                glib::FileError::Inval,
-                "Password invalid (possibly contains NUL characters)",
-            )
-        })?;
+        let pw = Self::get_password(password)?;
 
         let doc = util::call_with_gerror(|err_ptr| unsafe {
             ffi::poppler_document_new_from_data(
@@ -141,6 +121,22 @@ impl PopplerDocument {
             index: 0,
             doc: self,
         }
+    }
+
+
+    /// Converts the provided password into a `CString`.
+    fn get_password(password: Option<&str>) -> Result<CString, glib::error::Error> {
+        Ok(CString::new(if password.is_none() {
+            ""
+        } else {
+            password.expect("password.is_none() is false, but apparently it's lying.")
+        })
+            .map_err(|_| {
+                glib::error::Error::new(
+                    glib::FileError::Inval,
+                    "Password invalid (possibly contains NUL characters)",
+                )
+            })?)
     }
 
     /// Returns the number of pages.
