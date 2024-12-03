@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install libpoppler-glib-dev
-      run: sudo apt-get update && sudo apt-get install libpoppler-glib-dev
+    - uses: actions/checkout@v4
+    - name: Install libpoppler-glib-dev libcairo-dev
+      run: sudo apt-get update && sudo apt-get install libpoppler-glib-dev libcairo-dev
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --all-features
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --all-features
     - name: Publish to Cargo Registry
       if: github.ref == 'refs/heads/master'
       env:

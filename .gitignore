@@ -3,5 +3,5 @@
 .idea/
 Cargo.lock
 output.pdf
-out.png
+out*.png
 *.swp

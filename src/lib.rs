@@ -341,37 +341,40 @@ mod tests {
 
         for (index, p) in doc.pages().enumerate() {
             let (w, h) = p.get_size();
-            assert!(w == src_w);
-            assert!(h == src_h);
+            assert_eq!(w, src_w);
+            assert_eq!(h, src_h);
 
             println!("page {}/{} -- {}x{}", index + 1, total, w, h);
             count += 1;
         }
 
-        assert!(count == 1);
+        assert_eq!(count, 1);
 
         #[cfg(feature = "render")]
-        let count = 0;
+        let mut count = 0;
 
         #[cfg(feature = "render")]
         for (index, p) in doc.pages().enumerate() {
             let (w, h) = p.get_size();
 
-            assert!(w == src_w);
-            assert!(h == src_h);
+            assert_eq!(w, src_w);
+            assert_eq!(h, src_h);
 
-            let surface = ImageSurface::create(Format::ARgb32, w as i32, h as i32).unwrap();
+            let surface = ImageSurface::create(Format::ARgb32, w as i32, h as i32).expect("failed to create image surface");
+            let context = Context::new(&surface).expect("failed to create cairo context");
             (|page: &PopplerPage, ctx: &Context| {
                 ctx.save().unwrap();
                 page.render(ctx);
                 ctx.restore().unwrap();
                 ctx.show_page().unwrap();
-            })(&page, &ctx);
+            })(&p, &context);
             let mut f: File = File::create(format!("out{}.png", index)).unwrap();
             surface.write_to_png(&mut f).expect("Unable to write PNG");
+
+            count += 1;
         }
 
         #[cfg(feature = "render")]
-        assert!(count == 1)
+        assert_eq!(count, 1)
     }
 }
