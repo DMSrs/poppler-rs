@@ -137,6 +137,7 @@ impl PopplerDocument {
                     "Password invalid (possibly contains NUL characters)",
                 )
             })?)
+    }
 
     /// Returns the number of pages.
     ///
@@ -148,7 +149,6 @@ impl PopplerDocument {
     /// Indicates whether this document has no pages.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
-
     }
 }
 
