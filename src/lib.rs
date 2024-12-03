@@ -3,6 +3,10 @@ use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int};
 use std::path;
 
+/// Re-exports `cairo` to provide types required for rendering.
+#[cfg(feature = "render")]
+pub use cairo;
+
 mod ffi;
 mod util;
 
