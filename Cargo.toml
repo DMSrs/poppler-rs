@@ -14,6 +14,6 @@ edition = "2018"
 render = ["dep:cairo-rs"]
 
 [dependencies]
-cairo-rs = { version = "0.18.5", features = ["png", "pdf"], optional = true }
-glib = "0.18.5"
-gobject-sys = "0.15"
+cairo-rs = { version = "0.20.5", features = ["png", "pdf"], optional = true }
+glib = "0.20.6"
+gobject-sys = "0.20"

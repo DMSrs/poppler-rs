@@ -3,16 +3,23 @@ use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int};
 use std::path;
 
+/// Re-exports `cairo` to provide types required for rendering.
+#[cfg(feature = "render")]
+pub use cairo;
+
 mod ffi;
 mod util;
 
+/// A Poppler PDF document.
 #[derive(Debug)]
 pub struct PopplerDocument(*mut ffi::PopplerDocument);
 
+/// Represents a page in a [`PopplerDocument`].
 #[derive(Debug)]
 pub struct PopplerPage(*mut ffi::PopplerPage);
 
 impl PopplerDocument {
+    /// Creates a new Poppler document.
     pub fn new_from_file<P: AsRef<path::Path>>(
         p: P,
         password: Option<&str>,
@@ -26,6 +33,8 @@ impl PopplerDocument {
 
         Ok(PopplerDocument(doc))
     }
+
+    /// Creates a new Poppler document.
     pub fn new_from_data(
         data: &mut [u8],
         password: Option<&str>,
@@ -49,6 +58,8 @@ impl PopplerDocument {
 
         Ok(PopplerDocument(doc))
     }
+
+    /// Returns the document's title.
     pub fn get_title(&self) -> Option<String> {
         unsafe {
             let ptr: *mut c_char = ffi::poppler_document_get_title(self.0);
@@ -59,6 +70,8 @@ impl PopplerDocument {
             }
         }
     }
+
+    /// Returns the XML metadata string of the document.
     pub fn get_metadata(&self) -> Option<String> {
         unsafe {
             let ptr: *mut c_char = ffi::poppler_document_get_metadata(self.0);
@@ -69,6 +82,8 @@ impl PopplerDocument {
             }
         }
     }
+
+    /// Returns the PDF version of document as a string (e.g. `PDF-1.6`).
     pub fn get_pdf_version_string(&self) -> Option<String> {
         unsafe {
             let ptr: *mut c_char = ffi::poppler_document_get_pdf_version_string(self.0);
@@ -79,16 +94,20 @@ impl PopplerDocument {
             }
         }
     }
+
+    /// Returns the flags specifying which operations are permitted when the document is opened.
     pub fn get_permissions(&self) -> u8 {
         unsafe { ffi::poppler_document_get_permissions(self.0) as u8 }
     }
 
+    /// Returns the number of pages in a loaded document.
     pub fn get_n_pages(&self) -> usize {
         // FIXME: what's the correct type here? can we assume a document
         //        has a positive number of pages?
         (unsafe { ffi::poppler_document_get_n_pages(self.0) }) as usize
     }
 
+    /// Returns the page indexed at `index`.
     pub fn get_page(&self, index: usize) -> Option<PopplerPage> {
         match unsafe { ffi::poppler_document_get_page(self.0, index as c_int) } {
             ptr if ptr.is_null() => None,
@@ -104,6 +123,7 @@ impl PopplerDocument {
         }
     }
 
+
     /// Converts the provided password into a `CString`.
     fn get_password(password: Option<&str>) -> Result<CString, glib::error::Error> {
         Ok(CString::new(if password.is_none() {
@@ -117,6 +137,18 @@ impl PopplerDocument {
                     "Password invalid (possibly contains NUL characters)",
                 )
             })?)
+
+    /// Returns the number of pages.
+    ///
+    /// This function is a convenience wrapper around [`get_n_pages`](Self::get_n_pages).
+    pub fn len(&self) -> usize {
+        self.get_n_pages()
+    }
+
+    /// Indicates whether this document has no pages.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+
     }
 }
 
@@ -129,6 +161,7 @@ impl Drop for PopplerDocument {
 }
 
 impl PopplerPage {
+    /// Gets the size of page at the current scale and rotation.
     pub fn get_size(&self) -> (f64, f64) {
         let mut width: f64 = 0.0;
         let mut height: f64 = 0.0;
@@ -144,18 +177,40 @@ impl PopplerPage {
         (width, height)
     }
 
+    /// Render the page to the given cairo context.
+    ///
+    /// This function is for rendering a page that will be displayed. If you want to render a
+    /// page that will be printed use [`render_for_printing`](Self::render_for_printing) instead. Please see the
+    /// Poppler documentation for that function for the differences between rendering to the screen
+    /// and rendering to a printer.
     #[cfg(feature = "render")]
     pub fn render(&self, ctx: &cairo::Context) {
         let ctx_raw = ctx.to_raw_none();
         unsafe { ffi::poppler_page_render(self.0, ctx_raw) }
     }
 
+    /// Render the page to the given cairo context for printing with POPPLER_PRINT_ALL flags selected.
+    ///
+    /// The difference between [`render`](Self::render) and this function is that some things get
+    /// rendered differently between screens and printers:
+    ///
+    /// * PDF annotations get rendered according to their PopplerAnnotFlag value.
+    ///   For example, POPPLER_ANNOT_FLAG_PRINT refers to whether an annotation is printed or not,
+    ///   whereas POPPLER_ANNOT_FLAG_NO_VIEW refers to whether an annotation is invisible when displaying to the screen.
+    /// * PDF supports "hairlines" of width 0.0, which often get rendered as having a width of 1
+    ///   device pixel. When displaying on a screen, Cairo may render such lines wide so that
+    ///   they are hard to see, and Poppler makes use of PDF's Stroke Adjust graphics parameter
+    ///   to make the lines easier to see. However, when printing, Poppler is able to directly use a printer's pixel size instead.
+    /// * Some advanced features in PDF may require an image to be rasterized before sending
+    ///   off to a printer. This may produce raster images which exceed Cairo's limits.
+    ///   The "printing" functions will detect this condition and try to down-scale the intermediate surfaces as appropriate.
     #[cfg(feature = "render")]
     pub fn render_for_printing(&self, ctx: &cairo::Context) {
         let ctx_raw = ctx.to_raw_none();
         unsafe { ffi::poppler_page_render_for_printing(self.0, ctx_raw) }
     }
 
+    /// Retrieves the text of the page.
     pub fn get_text(&self) -> Option<&str> {
         match unsafe { ffi::poppler_page_get_text(self.0) } {
             ptr if ptr.is_null() => None,
@@ -336,37 +391,41 @@ mod tests {
 
         for (index, p) in doc.pages().enumerate() {
             let (w, h) = p.get_size();
-            assert!(w == src_w);
-            assert!(h == src_h);
+            assert_eq!(w, src_w);
+            assert_eq!(h, src_h);
 
             println!("page {}/{} -- {}x{}", index + 1, total, w, h);
             count += 1;
         }
 
-        assert!(count == 1);
+        assert_eq!(count, 1);
 
         #[cfg(feature = "render")]
-        let count = 0;
+        let mut count = 0;
 
         #[cfg(feature = "render")]
         for (index, p) in doc.pages().enumerate() {
             let (w, h) = p.get_size();
 
-            assert!(w == src_w);
-            assert!(h == src_h);
+            assert_eq!(w, src_w);
+            assert_eq!(h, src_h);
 
-            let surface = ImageSurface::create(Format::ARgb32, w as i32, h as i32).unwrap();
+            let surface = ImageSurface::create(Format::ARgb32, w as i32, h as i32).expect("failed to create image surface");
+            let context = Context::new(&surface).expect("failed to create cairo context");
             (|page: &PopplerPage, ctx: &Context| {
                 ctx.save().unwrap();
                 page.render(ctx);
                 ctx.restore().unwrap();
                 ctx.show_page().unwrap();
-            })(&page, &ctx);
+            })(&p, &context);
             let mut f: File = File::create(format!("out{}.png", index)).unwrap();
             surface.write_to_png(&mut f).expect("Unable to write PNG");
+
+            count += 1;
         }
 
         #[cfg(feature = "render")]
-        assert!(count == 1)
+        assert_eq!(count, 1)
     }
 }
+
